@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { registerSchema, loginSchema } from "@/schemas/auth";
-import { createTaskSchema, updateTaskSchema } from "@/schemas/task";
+import { createTaskCommentSchema, createTaskSchema, updateTaskSchema } from "@/schemas/task";
 
 describe("auth schemas", () => {
   it("accepts a well-formed register payload", () => {
@@ -45,6 +45,19 @@ describe("task schemas", () => {
 
   it("rejects unknown statuses", () => {
     const result = updateTaskSchema.safeParse({ status: "blocked" });
+    expect(result.success).toBe(false);
+  });
+
+  it("trims and accepts a valid comment body", () => {
+    const result = createTaskCommentSchema.safeParse({ body: "  Looks good to me.  " });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.body).toBe("Looks good to me.");
+    }
+  });
+
+  it("rejects a blank comment body", () => {
+    const result = createTaskCommentSchema.safeParse({ body: "   " });
     expect(result.success).toBe(false);
   });
 });

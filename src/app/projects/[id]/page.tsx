@@ -4,11 +4,12 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, getToken } from "@/lib/api-client";
+import { apiFetch, getStoredUser, getToken } from "@/lib/api-client";
 import { Header } from "@/components/Header";
+import { ProjectExportButton } from "@/components/ProjectExportButton";
 import { StatusColumn } from "@/components/StatusColumn";
 import { TaskDetail } from "@/components/TaskDetail";
-import type { ApiProjectDetail, ApiTask, TaskStatus } from "@/types";
+import type { ApiProjectDetail, ApiTask, Role, TaskStatus } from "@/types";
 import { STATUS_ORDER } from "@/types";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -18,7 +19,7 @@ export default function ProjectPage({ params }: PageProps) {
   const { id } = use(params);
   const queryClient = useQueryClient();
 
-  const [activeTask, setActiveTask] = useState<ApiTask | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newColumn, setNewColumn] = useState<TaskStatus>("todo");
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +47,11 @@ export default function ProjectPage({ params }: PageProps) {
   });
 
   const project = data?.project;
+  const currentUserId = getStoredUser()?.id;
+  const currentUserRole: Role | null = project && currentUserId
+    ? (project.memberships.find((membership) => membership.user.id === currentUserId)?.role ?? null)
+    : null;
+  const activeTask = project?.tasks.find((task) => task.id === activeTaskId) ?? null;
   const tasksByStatus: Record<TaskStatus, ApiTask[]> = {
     todo: [],
     in_progress: [],
@@ -91,6 +97,7 @@ export default function ProjectPage({ params }: PageProps) {
                   owner: {project.owner.name} · {project.memberships.length} members
                 </p>
               </div>
+              <ProjectExportButton projectId={id} currentUserRole={currentUserRole} />
             </div>
 
             <section className="bg-surface border border-border rounded-lg p-4 mb-6">
@@ -143,7 +150,7 @@ export default function ProjectPage({ params }: PageProps) {
                   key={s}
                   status={s}
                   tasks={tasksByStatus[s]}
-                  onTaskClick={setActiveTask}
+                  onTaskClick={(task) => setActiveTaskId(task.id)}
                 />
               ))}
             </div>
@@ -172,8 +179,9 @@ export default function ProjectPage({ params }: PageProps) {
         <TaskDetail
           task={activeTask}
           projectId={id}
+          currentUserRole={currentUserRole}
           members={project.memberships}
-          onClose={() => setActiveTask(null)}
+          onClose={() => setActiveTaskId(null)}
         />
       )}
     </div>

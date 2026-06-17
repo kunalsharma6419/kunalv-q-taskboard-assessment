@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("seeding…");
 
+  await prisma.taskComment.deleteMany();
   await prisma.task.deleteMany();
   await prisma.membership.deleteMany();
   await prisma.project.deleteMany();
@@ -81,8 +82,9 @@ async function main() {
     { title: "QA the new signup flow end-to-end", status: TaskStatus.todo, assignee: arjun.id, position: 6 },
   ];
 
+  const createdLaunchTasks: { id: string }[] = [];
   for (const t of launchTasks) {
-    await prisma.task.create({
+    const task = await prisma.task.create({
       data: {
         projectId: launch.id,
         title: t.title,
@@ -93,6 +95,7 @@ async function main() {
         position: t.position,
       },
     });
+    createdLaunchTasks.push(task);
   }
 
   const onboardingTasks = [
@@ -103,8 +106,9 @@ async function main() {
     { title: "Define success metric (TTFV target)", status: TaskStatus.todo, assignee: arjun.id, position: 4 },
   ];
 
+  const createdOnboardingTasks: { id: string }[] = [];
   for (const t of onboardingTasks) {
-    await prisma.task.create({
+    const task = await prisma.task.create({
       data: {
         projectId: onboarding.id,
         title: t.title,
@@ -115,7 +119,28 @@ async function main() {
         position: t.position,
       },
     });
+    createdOnboardingTasks.push(task);
   }
+
+  await prisma.taskComment.createMany({
+    data: [
+      {
+        taskId: createdLaunchTasks[0].id,
+        authorId: meera.id,
+        body: "Locking this as complete after the final sign-off from marketing.",
+      },
+      {
+        taskId: createdLaunchTasks[0].id,
+        authorId: arjun.id,
+        body: "Confirmed. I shared the final timeline in the launch channel.",
+      },
+      {
+        taskId: createdOnboardingTasks[1].id,
+        authorId: lina.id,
+        body: "Three interviews are done. Two more are scheduled for tomorrow.",
+      },
+    ],
+  });
 
   console.log("seed complete.");
   console.log("login with any of these (password: password123):");

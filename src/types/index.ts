@@ -7,6 +7,28 @@ export type ApiUser = {
   name: string;
 };
 
+export type ApiTaskComment = {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: ApiUser;
+};
+
+export type AirtableExportFailure = {
+  taskId: string;
+  taskTitle: string;
+  message: string;
+  permanent: boolean;
+};
+
+export type AirtableExportResult = {
+  total: number;
+  created: number;
+  updated: number;
+  failed: number;
+  failures: AirtableExportFailure[];
+};
+
 export type ApiTask = {
   id: string;
   projectId: string;
@@ -19,12 +41,13 @@ export type ApiTask = {
   createdAt: string;
   updatedAt: string;
   assignee?: ApiUser | null;
+  comments: ApiTaskComment[];
 };
 
 export type ApiProjectMember = {
   id: string;
   role: Role;
-  user: ApiUser & { passwordHash?: string };
+  user: ApiUser;
 };
 
 export type ApiProjectDetail = {
@@ -32,7 +55,7 @@ export type ApiProjectDetail = {
   name: string;
   description: string | null;
   ownerId: string;
-  owner: ApiUser & { passwordHash?: string };
+  owner: ApiUser;
   memberships: ApiProjectMember[];
   tasks: ApiTask[];
   createdAt: string;

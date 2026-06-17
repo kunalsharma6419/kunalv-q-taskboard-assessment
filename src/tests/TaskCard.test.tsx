@@ -15,6 +15,7 @@ const baseTask: ApiTask = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   assignee: { id: "u_1", name: "Meera Iyer", email: "meera@taskboard.dev" },
+  comments: [],
 };
 
 describe("<TaskCard />", () => {

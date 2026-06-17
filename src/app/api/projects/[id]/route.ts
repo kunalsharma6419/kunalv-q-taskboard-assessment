@@ -12,6 +12,7 @@ import {
 import { updateProjectSchema } from "@/schemas/project";
 
 type Params = { params: Promise<{ id: string }> };
+const safeUserSelect = { id: true, email: true, name: true } as const;
 
 export async function GET(req: NextRequest, { params }: Params) {
   const user = await getCurrentUser(req);
@@ -25,14 +26,19 @@ export async function GET(req: NextRequest, { params }: Params) {
   const project = await prisma.project.findUnique({
     where: { id },
     include: {
-      owner: true,
+      owner: { select: safeUserSelect },
       memberships: {
-        include: { user: true },
+        include: { user: { select: safeUserSelect } },
       },
       tasks: {
         include: {
-          assignee: true,
-          createdBy: true,
+          assignee: { select: safeUserSelect },
+          comments: {
+            include: {
+              author: { select: safeUserSelect },
+            },
+            orderBy: { createdAt: "asc" },
+          },
         },
         orderBy: [{ status: "asc" }, { position: "asc" }],
       },
